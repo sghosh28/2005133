@@ -16,11 +16,24 @@ loginData = {
     "rollNo": "2005133"
 }
 logCreds = {}
-axios.post('http://20.244.56.144/train/auth', loginData).then((res) => {
-    console.log(res.data)
-    logCreds = res.data
+const auth = async() => {
 
-})
+  await axios.post('http://20.244.56.144/train/auth', loginData).then((res) => {
+      console.log(res.data)
+      logCreds = res.data
+  
+  })
+}
+const authMiddleware = async(req, res, next) => {
+  let currentUnixTime = Math.round((new Date()).getTime() / 1000);
+  if (!logCreds.access_token|| logCreds.expires_in < currentUnixTime) {
+      await auth()
+  }
+  next()
+}
+
+app.use(authMiddleware)
+
 
 app.get('/getTrainSchedule',async(req,res) =>{
     try {
